@@ -13,7 +13,7 @@ import it.polito.tdp.metroparis.model.Fermata;
 import it.polito.tdp.metroparis.model.Linea;
 
 public class MetroDAO {
-
+	
 	public List<Fermata> getAllFermate() {
 
 		final String sql = "SELECT id_fermata, nome, coordx, coordy FROM fermata ORDER BY nome ASC";
@@ -68,5 +68,61 @@ public class MetroDAO {
 		return linee;
 	}
 
+	public boolean esisteConnessione(Fermata partenza, Fermata arrivo) {
+		
+		String sql="Select COUNT(*) AS cnt\n " + 
+				"from connessione\n " + 
+				"where id_stazP = ? \n " + 
+				"and id_stazA = ?";
+		
+		Connection conn = DBConnect.getConnection();
+		PreparedStatement st;
+		try {
+			st = conn.prepareStatement(sql);
+			st.setInt(1, partenza.getIdFermata());
+			st.setInt(2, arrivo.getIdFermata());
+			
+			ResultSet rs = st.executeQuery();
+			
+			rs.next();
+			
+			int numero = rs.getInt("cnt");
+			
+			conn.close();
+			
+			return (numero>0);
+		}catch(SQLException e){
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+
+	public List<Fermata> stazioniArrivo(Fermata partenza) {
+		String sql = "Select id_stazA\n " + 
+				"from connessione\n " + 
+				"where id_stazP = ?";
+		
+		Connection conn = DBConnect.getConnection();
+		PreparedStatement st;
+		try {
+			st = conn.prepareStatement(sql);
+			st.setInt(1, partenza.getIdFermata());
+			ResultSet rs = st.executeQuery();
+			
+			List<Fermata> result = new ArrayList<Fermata>();
+			
+			while(rs.next()) {
+				result.add(new Fermata(rs.getInt("id_stazA"), null, null));
+			}
+			
+			conn.close();
+			return result;
+			
+		}catch(SQLException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 
 }
